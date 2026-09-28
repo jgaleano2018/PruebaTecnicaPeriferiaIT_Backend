@@ -1,0 +1,79 @@
+# Todos los valores sensibles/configurables provienen de variables de entorno (ver .env.example).
+server:
+  port: ${FEED_SERVICE_PORT:8083}
+  shutdown: graceful
+
+spring:
+  application:
+    name: feed-service
+  reactor:
+    context-propagation: auto
+  r2dbc:
+    url: ${FEED_R2DBC_URL:r2dbc:postgresql://localhost:5432/feed_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    pool:
+      initial-size: 2
+      max-size: ${DB_POOL_SIZE:10}
+  flyway:
+    url: ${FEED_DB_URL:jdbc:postgresql://localhost:5432/feed_db}
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      observation-enabled: true
+    template:
+      observation-enabled: true
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      issuer: ${JWT_ISSUER:periferia-social-auth}
+  kafka:
+    projection-group-id: ${FEED_PROJECTION_GROUP:feed-projection}
+    broadcast-group-prefix: ${FEED_BROADCAST_GROUP_PREFIX:feed-broadcast}
+    projection-timeout: ${FEED_PROJECTION_TIMEOUT:PT10S}
+    topics:
+      post-created: ${KAFKA_TOPIC_POST_CREATED:social.post.created.v1}
+  realtime:
+    heartbeat-interval: ${WS_HEARTBEAT_INTERVAL:PT25S}
+    subscriber-buffer-size: ${WS_SUBSCRIBER_BUFFER:256}
+  openapi:
+    server-url: ${OPENAPI_SERVER_URL:/}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] "
+  level:
+    com.periferia.social: ${LOG_LEVEL_APP:INFO}

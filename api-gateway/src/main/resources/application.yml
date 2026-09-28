@@ -1,0 +1,63 @@
+# Todos los valores configurables provienen de variables de entorno (ver .env.example).
+server:
+  port: ${GATEWAY_PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: api-gateway
+  reactor:
+    context-propagation: auto
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      issuer: ${JWT_ISSUER:periferia-social-auth}
+  gateway:
+    auth-service-uri: ${AUTH_SERVICE_URI:http://localhost:8081}
+    post-service-uri: ${POST_SERVICE_URI:http://localhost:8082}
+    feed-service-uri: ${FEED_SERVICE_URI:http://localhost:8083}
+    feed-websocket-uri: ${FEED_WEBSOCKET_URI:ws://localhost:8083}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost,capacitor://localhost,https://localhost}
+    resilience:
+      timeout: ${GATEWAY_TIMEOUT:PT5S}
+      open-state-wait: ${GATEWAY_CB_OPEN_WAIT:PT15S}
+      failure-rate-threshold: ${GATEWAY_CB_FAILURE_RATE:50}
+      retry-first-backoff: ${GATEWAY_RETRY_BACKOFF:PT0.1S}
+      retries: ${GATEWAY_RETRIES:2}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: auth-service
+        url: /docs/auth/v3/api-docs
+      - name: post-service
+        url: /docs/posts/v3/api-docs
+      - name: feed-service
+        url: /docs/feed/v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,gateway
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] "
+  level:
+    com.periferia.social: ${LOG_LEVEL_APP:INFO}

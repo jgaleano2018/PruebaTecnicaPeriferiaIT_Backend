@@ -1,0 +1,123 @@
+# Todos los valores sensibles/configurables provienen de variables de entorno (ver .env.example).
+server:
+  port: ${AUTH_SERVICE_PORT:8081}
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: auth-service
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${AUTH_DB_URL:jdbc:postgresql://localhost:5432/auth_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        delivery.timeout.ms: 10000
+        request.timeout.ms: 5000
+    template:
+      observation-enabled: true
+
+app:
+  security:
+    bcrypt-strength: ${BCRYPT_STRENGTH:10}
+    jwt:
+      secret: ${JWT_SECRET}
+      issuer: ${JWT_ISSUER:periferia-social-auth}
+      expiration: ${JWT_EXPIRATION:PT1H}
+  kafka:
+    topic-partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+    topic-replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    topics:
+      user-registered: ${KAFKA_TOPIC_USER_REGISTERED:social.user.registered.v1}
+  outbox:
+    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:1000}
+    batch-size: ${OUTBOX_BATCH_SIZE:50}
+  seed:
+    enabled: ${SEED_ENABLED:true}
+    default-password: ${SEED_DEFAULT_PASSWORD:}
+    users:
+      - username: alice
+        display-name: Alice Gómez
+      - username: bob
+        display-name: Bob Martínez
+      - username: carol
+        display-name: Carol Rodríguez
+      - username: david
+        display-name: David López
+  openapi:
+    title: Auth Service API
+    description: Autenticación con usuario/clave y emisión de JWT
+    server-url: ${OPENAPI_SERVER_URL:/}
+
+resilience4j:
+  retry:
+    instances:
+      outboxPublisher:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        ignore-exceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+  circuitbreaker:
+    instances:
+      outboxPublisher:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 2
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] "
+  level:
+    com.periferia.social: ${LOG_LEVEL_APP:INFO}
