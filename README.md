@@ -185,6 +185,14 @@ curl -s -X POST http://localhost:8080/api/v1/posts \
   -H "Idempotency-Key: $(uuidgen)" -d '{"message":"Hola desde curl"}' | jq
 ```
 
+### Script SQL de usuarios de prueba
+
+`infra/postgres/seed-test-users.sql` inserta (de forma idempotente) los usuarios **alice, bob, carol, david, eva y felipe** con clave `Password123*` en `auth_db`, y registra un evento `UserRegistered` en el outbox para que se cree su publicación inicial. Útil para recrear los datos sin reiniciar el servicio:
+
+```powershell
+Get-Content infra/postgres/seed-test-users.sql | docker exec -i social-postgres psql -U postgres -d auth_db
+```
+
 ### Desarrollo local (servicios en el IDE)
 
 ```bash
