@@ -1,6 +1,6 @@
 # Red Social — Backend (microservicios)
 
-Backend de una red social donde los usuarios inician sesión, ven las publicaciones de otros usuarios en tiempo real y publican mensajes.
+Backend prueba técnica de una red social (Periferia social dev) donde los usuarios inician sesión, ven las publicaciones de otros usuarios en tiempo real y publican mensajes.
 Construido con **Java 21 + Spring Boot 3.5**, arquitectura **hexagonal**, **Kafka** para eventos, **PostgreSQL**, **WebFlux/WebSocket** para tiempo real, y patrones de resiliencia y consistencia aplicados sin sobrecargar el MVP.
 
 > Frontend (Angular 21 + Capacitor): [PruebaTecnicaPeriferiaIT_Frontend](https://github.com/jgaleano2018/PruebaTecnicaPeriferiaIT_Frontend)
@@ -50,6 +50,10 @@ flowchart LR
 | **feed-service** | 8083 | WebFlux + R2DBC + Kafka + WebSocket | Lado de **lectura**: proyección del feed en PostgreSQL, listado reactivo paginado y difusión en tiempo real (WebSocket y SSE). |
 
 Los 4 microservicios se separan por **tipo de carga**: autenticación (poco frecuente, CPU por BCrypt), escritura (transaccional), lectura (muy frecuente, escalable y reactiva) y borde (I/O puro).
+
+### Diagrama de arquitectura
+
+![alt text](image.png)
 
 ### Flujo de una publicación
 
