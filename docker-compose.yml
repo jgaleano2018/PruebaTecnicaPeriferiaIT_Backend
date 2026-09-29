@@ -1,6 +1,6 @@
 # Levanta toda la plataforma backend:
 #   cp .env.example .env && docker compose up -d --build
-# Swagger agregado: http://localhost:8080/swagger-ui.html   |   Jaeger: http://localhost:16686
+# Swagger agregado: http://localhost:${GATEWAY_HOST_PORT}/swagger-ui.html (por defecto 8080)   |   Jaeger: http://localhost:16686
 name: periferia-social
 
 x-service-common: &service-common
@@ -124,8 +124,10 @@ services:
       dockerfile: api-gateway/Dockerfile
     image: periferia-social/api-gateway:1.0.0
     container_name: social-api-gateway
+    environment:
+      GATEWAY_PORT: 8080 # puerto interno fijo (healthcheck del Dockerfile)
     ports:
-      - "${GATEWAY_PORT:-8080}:${GATEWAY_PORT:-8080}"
+      - "${GATEWAY_HOST_PORT:-8080}:8080"
     depends_on:
       auth-service:
         condition: service_healthy

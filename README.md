@@ -155,9 +155,12 @@ docker compose up -d --build  # la primera vez tarda por la descarga de dependen
 docker compose ps             # espere a que todos estén "healthy"
 ```
 
+> **¿Puerto ocupado?** Si ya tiene algo en el 8080 (p. ej. Keycloak) o un PostgreSQL local en el 5432, cambie en `.env`
+> `GATEWAY_HOST_PORT` (y `OPENAPI_SERVER_URL`) y `POSTGRES_PORT`, y apunte el frontend al nuevo puerto (`.env.local`).
+
 | URL | Qué es |
 |---|---|
-| http://localhost:8080/swagger-ui.html | Swagger agregado |
+| http://localhost:8080/swagger-ui.html | Swagger agregado (o el puerto de `GATEWAY_HOST_PORT`) |
 | http://localhost:16686 | Jaeger (trazas distribuidas) |
 | http://localhost:8090 | Kafka UI (opcional: `docker compose --profile tools up -d`) |
 
